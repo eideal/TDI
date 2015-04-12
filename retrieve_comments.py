@@ -20,7 +20,7 @@ def comments_generator(client, video_id):
     except RequestError:
         return []
 
-    stop_comments = 1000   
+    stop_comments = 12000   
 
     while comment_feed is not None:
         for comment in comment_feed.entry:
@@ -61,8 +61,8 @@ h_CapsCount_SIG = ROOT.TH1F('Caps Fraction', 'Caps Fraction', 20, 0, 1)
 h_CapsCount_SIG.SetLineColor(ROOT.kRed)
 h_CapsCount_BG = ROOT.TH1F('Caps Fraction', 'Caps Fraction', 20, 0, 1)
 h_CapsCount_BG.SetLineColor(ROOT.kBlack)
-h_CapsCount_BG.SetStats(False)
-h_CapsCount_BG.GetXaxis().SetTitle('Caps Fraction')
+h_CapsCount_SIG.SetStats(False)
+h_CapsCount_SIG.GetXaxis().SetTitle('Caps Fraction')
 
 h_PunctCount_SIG = ROOT.TH1F('Punctuation Count', 'Punctuation Count', 20, 0, 20)
 h_PunctCount_SIG.SetLineColor(ROOT.kRed)
@@ -83,7 +83,7 @@ count = lambda l1, l2: len(list(filter(lambda c: c in l2, l1)))
 bg_comments = []
 ncomments = 0
 
-while ncomments < 1000:
+while ncomments < 12000:
     BG_VIDEO_ID = GenerateVideo()
     if not BG_VIDEO_ID: continue
     bg_comments += comments_generator(client, BG_VIDEO_ID)
@@ -155,10 +155,10 @@ legend = ROOT.TLegend(0.6,0.7,0.9,0.9)
 legend.SetBorderSize(0)
 legend.AddEntry(h_CapsCount_SIG, 'Signal', 'l')
 legend.AddEntry(h_CapsCount_BG, 'Background', 'l')
-h_CapsCount_BG.Scale(1./h_CapsCount_BG.GetSumOfWeights())
-h_CapsCount_BG.Draw()
 h_CapsCount_SIG.Scale(1./h_CapsCount_SIG.GetSumOfWeights())
-h_CapsCount_SIG.Draw('same')
+h_CapsCount_SIG.Draw()
+h_CapsCount_BG.Scale(1./h_CapsCount_BG.GetSumOfWeights())
+h_CapsCount_BG.Draw('same')
 legend.Draw('same')
 canvas.Print('CapsFraction.png')
 canvas.Clear()
