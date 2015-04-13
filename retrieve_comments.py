@@ -7,7 +7,7 @@ from random_video import GenerateVideo
 from gdata.service import RequestError
 
 
-#--------------------------------------
+#---------------------------------------------------------------------
 def comments_generator(client, video_id):
     """
     Returns the list of video comments given the video_ID
@@ -20,7 +20,7 @@ def comments_generator(client, video_id):
     except RequestError:
         return []
 
-    stop_comments = 12000   
+    stop_comments = 15000   
 
     while comment_feed is not None:
         for comment in comment_feed.entry:
@@ -39,9 +39,7 @@ def comments_generator(client, video_id):
 
 
     return comments_to_return
-#--------------------------------------
-
-
+#---------------------------------------------------------------------
 
 
 client = service.YouTubeService()
@@ -57,12 +55,12 @@ legend.SetBorderSize(0)
 legend.AddEntry(h_TriggerCount_SIG, 'Signal', 'l')
 legend.AddEntry(h_TriggerCount_BG, 'Background', 'l')
 
-h_CapsCount_SIG = ROOT.TH1F('Caps Fraction', 'Caps Fraction', 20, 0, 1)
+h_CapsCount_SIG = ROOT.TH1F('Caps Count', 'Caps Count', 30, 0, 30)
 h_CapsCount_SIG.SetLineColor(ROOT.kRed)
-h_CapsCount_BG = ROOT.TH1F('Caps Fraction', 'Caps Fraction', 20, 0, 1)
+h_CapsCount_BG = ROOT.TH1F('Caps Count', 'Caps Count', 30, 0, 30)
 h_CapsCount_BG.SetLineColor(ROOT.kBlack)
-h_CapsCount_SIG.SetStats(False)
-h_CapsCount_SIG.GetXaxis().SetTitle('Caps Fraction')
+h_CapsCount_BG.SetStats(False)
+h_CapsCount_BG.GetXaxis().SetTitle('Caps Count')
 
 h_PunctCount_SIG = ROOT.TH1F('Punctuation Count', 'Punctuation Count', 20, 0, 20)
 h_PunctCount_SIG.SetLineColor(ROOT.kRed)
@@ -83,7 +81,7 @@ count = lambda l1, l2: len(list(filter(lambda c: c in l2, l1)))
 bg_comments = []
 ncomments = 0
 
-while ncomments < 12000:
+while ncomments < 15000:
     BG_VIDEO_ID = GenerateVideo()
     if not BG_VIDEO_ID: continue
     bg_comments += comments_generator(client, BG_VIDEO_ID)
@@ -91,22 +89,24 @@ while ncomments < 12000:
     print 'nComments is %i ' % ncomments
 
 
+# Loop through the comments and compute variables
 for comment in bg_comments:
+
+    # Count # of CAPS characters in comment
+    n_caps_letters = sum(1 for l in comment.content.text if l.isupper())
+    h_CapsCount_BG.Fill(n_caps_letters)
+
+    # Count # of punctuation characters in comment
+    n_punct_char = count(comment.content.text, string.punctuation)
+    h_PunctCount_BG.Fill(n_punct_char)
+
+    # Split text string into words
     try:
         words = comment.content.text.split()
     except AttributeError: continue
 
-    trigger_count = 0
-    n_caps_letters = float(sum(1 for l in comment.content.text if l.isupper()))
-    n_tot_letters = float(count(comment.content.text, string.ascii_letters))
-    if n_tot_letters == 0:
-        h_CapsCount_BG.Fill(-1)
-    else:
-        h_CapsCount_BG.Fill(n_caps_letters/n_tot_letters)
-
-    n_punct_char = count(comment.content.text, string.punctuation)
-    h_PunctCount_BG.Fill(n_punct_char)
-    
+    # Count # of trigger words in comment
+    trigger_count = 0    
     for word in words:
         if word.strip(string.punctuation).lower() in trigger_words:
             trigger_count += 1
@@ -120,18 +120,18 @@ SIG_VIDEO_ID = 'gAyncf3DBUQ'
 sig_comments = []
 sig_comments += comments_generator(client, SIG_VIDEO_ID)
 
+# Loop through the signal comments and compute variables
 for comment in sig_comments:
     
-    n_caps_letters = float(sum(1 for l in comment.content.text if l.isupper()))
-    n_tot_letters = float(count(comment.content.text, string.ascii_letters))
-    if n_tot_letters == 0:
-        h_CapsCount_SIG.Fill(-1)
-    else:
-        h_CapsCount_SIG.Fill(n_caps_letters/n_tot_letters)
+    # Count # of CAPS characters in comment
+    n_caps_letters = sum(1 for l in comment.content.text if l.isupper())
+    h_CapsCount_SIG.Fill(n_caps_letters)
 
+    # Count # of punctuation characters in comment
     n_punct_char = count(comment.content.text, string.punctuation)
     h_PunctCount_SIG.Fill(n_punct_char)
 
+    # Count # of trigger words in comment
     trigger_count = 0
     words = comment.content.text.split()
     for word in words:
@@ -140,6 +140,8 @@ for comment in sig_comments:
 
     h_TriggerCount_SIG.Fill(trigger_count)
 
+
+# Draw and print the histograms/canvas
 h_TriggerCount_BG.SetStats(False)
 h_TriggerCount_BG.GetXaxis().SetTitle('Trigger Word Count')
 h_TriggerCount_BG.Scale(1./h_TriggerCount_BG.GetSumOfWeights())
@@ -155,10 +157,10 @@ legend = ROOT.TLegend(0.6,0.7,0.9,0.9)
 legend.SetBorderSize(0)
 legend.AddEntry(h_CapsCount_SIG, 'Signal', 'l')
 legend.AddEntry(h_CapsCount_BG, 'Background', 'l')
-h_CapsCount_SIG.Scale(1./h_CapsCount_SIG.GetSumOfWeights())
-h_CapsCount_SIG.Draw()
 h_CapsCount_BG.Scale(1./h_CapsCount_BG.GetSumOfWeights())
-h_CapsCount_BG.Draw('same')
+h_CapsCount_BG.Draw()
+h_CapsCount_SIG.Scale(1./h_CapsCount_SIG.GetSumOfWeights())
+h_CapsCount_SIG.Draw('same')
 legend.Draw('same')
 canvas.Print('CapsFraction.png')
 canvas.Clear()
@@ -173,126 +175,5 @@ h_PunctCount_SIG.Scale(1./h_PunctCount_SIG.GetSumOfWeights())
 h_PunctCount_SIG.Draw('same')
 legend.Draw('same')
 canvas.Print('PunctuationCount.png')
-
-
-
-
-
-
-
-
-
-
-#--------------------------------------
-#def comments_generator_2(client, video_id):
-#    """
-#    Returns the list of video comments given the video_ID
-#    """
-#    comments_to_return = []
-#    try:
-#        comment_feed = client.GetYouTubeVideoCommentFeed(video_id=video_id)
-#    # if the video has disabled comments:
-#    except RequestError:
-#        return []
-#
-#    while comment_feed is not None:
-#        for comment in comment_feed.entry:
-#            comments_to_return.append(comment)
-#        next_link = comment_feed.GetNextLink()
-#        if next_link is None:
-#             comment_feed = None
-#        else:
-#            try:
-#                comment_feed = client.GetYouTubeVideoCommentFeed(next_link.href)
-#            except RequestError:
-#                comment_feed = None
-#
-#    return comments_to_return
-
-
-
-
-
-
-
-
-#print bg_comments
-
-#BG_words_list = []
-#for comment in comments:
-#    #print comment.content.text
-#    if comment.content.text is None: continue
-#    words = comment.content.text.split()
-#    
-#    BG_words_list += words
-
-#BG_words_list_cleaned = []
-#for word in BG_words_list:
-#    word = word.strip(string.punctuation)
-#    BG_words_list_cleaned.append(word)
-
-#BG_words_list_cleaned.sort()
-#counts = collections.Counter(BG_words_list_cleaned)
-#new_list = sorted(BG_words_list_cleaned, key=counts.get, reverse=True)
-##print new_list
-
-
-
-
-#n_sig_comments = 0
-#n_sig_comments = len(sig_comments)
-#SIG_words_list = []
-#for comment in sig_comments:
-#    if comment.content.text is None: continue
-#    print comment.content.text
-#    words = comment.content.text.split()
-#    SIG_words_list += words
-#
-#SIG_words_list_cleaned = []
-#for word in SIG_words_list:
-#    word = word.strip(string.punctuation)
-#    SIG_words_list_cleaned.append(word)
-#
-#counts_sig = collections.Counter(SIG_words_list_cleaned)
-#new_sig_list = sorted(SIG_words_list_cleaned, key=counts_sig.get, reverse=True)
-##print new_sig_list
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#    if '\\' in word: continue
-#    else:
-#        BG_words_list_cleaned.append(word)
-#print BG_words_list_cleaned
-
-#print len(comments)
-#sys.exit()
-
-
-
-#for i, comment in enumerate(comments_generator(client, VIDEO_ID)):
-#    ncomments += 1
-#    author_name = comment.author[0].name.text
-#    text = comment.content.text
-#    print '-'*40
-#    #if i > 15: break
-#   # print comment.GetSelfLink()
-#    #print dir(comment.extension_attributes)
-#    print("{}: {}".format(author_name, text))
-    
-
-#print 'Total # of comments: {}'.format(ncomments)
-
-
 
 
