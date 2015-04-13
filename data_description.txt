@@ -1,0 +1,4 @@
+Description of the data source used in this project:
+
+I will take advantage of the YouTube API, which allows for reading and retrieving YouTube video comment feeds. Comments obtained from a randomly-generated list of YouTube videos will be used as "background" in the boosted decision tree (BDT) training, and comments obtained from a selected list of videos that are rich in sexist comments will be used as "signal" in the training.
+
