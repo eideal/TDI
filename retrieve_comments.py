@@ -92,6 +92,11 @@ while ncomments < 15000:
 # Loop through the comments and compute variables
 for comment in bg_comments:
 
+    # Split text string into words
+    try:
+        words = comment.content.text.split()
+    except AttributeError: continue
+
     # Count # of CAPS characters in comment
     n_caps_letters = sum(1 for l in comment.content.text if l.isupper())
     h_CapsCount_BG.Fill(n_caps_letters)
@@ -100,17 +105,13 @@ for comment in bg_comments:
     n_punct_char = count(comment.content.text, string.punctuation)
     h_PunctCount_BG.Fill(n_punct_char)
 
-    # Split text string into words
-    try:
-        words = comment.content.text.split()
-    except AttributeError: continue
-
     # Count # of trigger words in comment
     trigger_count = 0    
     for word in words:
         if word.strip(string.punctuation).lower() in trigger_words:
             trigger_count += 1
     h_TriggerCount_BG.Fill(trigger_count)
+
 
 
 #----------------------------------SIGNAL------------------------------------------------

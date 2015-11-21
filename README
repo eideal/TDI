@@ -1,0 +1,23 @@
+README for TDI
+
+Using the Youtube API to obtain video links and retrieve their comments. 
+Signal: comments obtained from a video known to contain sexist comments
+Background: comments obtained from videos that are expected to be largely non-sexist in nature
+
+----
+Scripts
+----
+
+random_video.py: generate a random dictionary word and use it to query Youtube for a video. Return the first video obtained from the search.
+
+retrieve_comments.py: grab a set of video comments from a "signal" video that is widely considered sexist in nature and a set of video comments for a set of videos that are expected to be largely non-sexist. Make plots of discriminating variables overlying signal with background.
+
+----
+Plots
+----
+
+CapsCount.png: histogram of the # of caps characters in comment
+
+PunctuationCount.png: histogram of the # of punctuation characters in comment
+
+TriggerCount.png: histogram of the trigger words contained in comment - these trigger words are defined in retrieve_comments.py
